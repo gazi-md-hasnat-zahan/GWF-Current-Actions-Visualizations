@@ -7,19 +7,19 @@ This was an initiative by Global Water Futures (GWF) and the Dept. of CS, Univer
 The basic flow is like this:
 -	A base map is loaded (from mapbox maps) at the start
 -	3 data layers are added (from 3 GeoJSON files) overlaying the base map: basin, project, and site
-    o	Basin: colored polygons
-    o	Project: circles with very small radius, designed not to be visible to the users, but to be still present
-    o	Site: visible colored circles, colors are based on basins they belong to
+    -	Basin: colored polygons
+    -	Project: circles with very small radius, designed not to be visible to the users, but to be still present
+    -	Site: visible colored circles, colors are based on basins they belong to
 -	The left sidebar displays the projects in thumbnail view (at the start). There are-
-    o	2 listing options: projects and sites
-    o	2 viewing options: thumbnail and list
-    o	1 search field: using project/site names
+    -	2 listing options: projects and sites
+    -	2 viewing options: thumbnail and list
+    -	1 search field: using project/site names
 -	The top middle div shows ‘base map toggle’ options
-    o	6 map options, custom one is the default 
+    -	6 map options, custom one is the default 
 -	The top right div shows ‘layer toggle’ options
-    o	By default, both layers (project and site) are visible
+    -	By default, both layers (project and site) are visible
 -	The bottom right div ‘basin legend and color’ options
-    o	7 color palette options, 7 is default 
+    -	7 color palette options, 7 is default 
 
 ## Interactions:
 
