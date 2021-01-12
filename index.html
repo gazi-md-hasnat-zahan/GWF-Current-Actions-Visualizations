@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Global Water Futures</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <style>
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+    }
+
+    .mapboxgl-popup-content {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .menuLayerToggleContainer {
+      position: absolute;
+      top: 3vh;
+      right: 1vw;
+      z-index: 1;
+      width: 11vw;
+      /* height: 5%; */
+      display: block;
+    }
+
+    .menuLayerToggleSwitchContainer {
+      background-color: rgba(221, 221, 221, 0.8);
+      border-radius: 10px 0 0 10px;
+    }
+
+    .switch {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 1%;
+      right: 0;
+      bottom: 0;
+      height: 30%;
+      width: 25%;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 100%;
+      width: 50%;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    #slider1 {
+      top: 10%;
+    }
+
+    #slider2 {
+      top: 60%;
+    }
+
+    input:checked+.slider {
+      background-color: #2196F3;
+    }
+
+    input:focus+.slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked+.slider:before {
+      -webkit-transform: translateX(140%);
+      -ms-transform: translateX(140%);
+      transform: translateX(100%);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 10px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    #listViewButton {
+      width: 2vw;
+      height: 2vw;
+      border-radius: 5px;
+      margin-right: .3vw;
+      margin-top: .2vw;
+      background: rgba(145, 145, 145, 0.7);
+      cursor: pointer;
+      float: right;
+      display: none;
+    }
+
+    .listViewButtonLines {
+      width: 1.5vw;
+      height: .2vw;
+      margin-top: .2vw;
+      margin-left: .25vw;
+      background-color: white;
+    }
+
+    .listViewButtonLines:first-child {
+      margin-top: .3vw;
+    }
+
+    #thumbnailViewButton {
+      width: 2vw;
+      height: 2vw;
+      border-radius: 5px;
+      margin-right: .3vw;
+      margin-top: .2vw;
+      background: rgba(145, 145, 145, 0.7);
+      cursor: pointer;
+      float: right;
+      display: none;
+    }
+
+    .thumbnailViewButtonBoxes {
+      float: left;
+      width: .6vw;
+      height: .6vw;
+      margin-top: .2vw;
+      margin-left: .3vw;
+      background-color: white;
+    }
+
+    #layerItemsViewToggle {
+      position: absolute;
+      opacity: .8;
+      z-index: 1;
+      top: 13.3vw;
+      left: 2.4vw;
+      font-family: "Trebuchet MS", Helvetica, sans-serif;
+      display: none;
+
+      -webkit-transform: rotate(270deg);
+      -webkit-transform-origin: left bottom;
+      -moz-transform: rotate(270deg);
+      -moz-transform-origin: left bottom;
+      -ms-transform: rotate(270deg);
+      -ms-transform-origin: left bottom;
+      -o-transform: rotate(270deg);
+      -o-transform-origin: left bottom;
+      transform: rotate(270deg);
+      transform-origin: left bottom;
+
+    }
+
+    #layerItemsViewToggle a {
+      font-size: 1vw;
+      color: black;
+      display: inline;
+      margin: 0;
+      padding: .3vw 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+      border-radius: 5px 5px 0 0;
+      text-align: center;
+      background: #fff;
+      text-decoration: none !important;
+    }
+
+    #layerItemsViewToggle a:first-child {
+      border-right: 1px solid rgba(0, 0, 0, 0.25);
+    }
+
+    #layerItemsViewToggle a:last-child {
+      border: none;
+    }
+
+    #layerItemsViewToggle a:hover {
+      background-color: #f8f8f8;
+      color: black;
+    }
+
+    #layerItemsViewToggle a.activeView {
+      /* background-color: #dddddd; */
+      /* background-color: #2196F3; */
+      background-color: #3d3d3d;
+      color: #2196F3;
+      font-size: 1vw;
+    }
+
+    #layerItemsViewToggle a.activeView:hover {
+      background: #b7b7b7;
+      color: #0c83e1;
+    }
+
+    .map-overlay {
+      position: absolute;
+      width: 25vw;
+      top: 2vw;
+      bottom: 2vw;
+      left: 2.7vw;
+      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      background: rgba(221, 221, 221, 0.5);
+      max-height: 100%;
+      overflow: hidden;
+      border-radius: 0px 10px 10px 10px;
+      display: none;
+    }
+
+    .map-overlay .viewTop {
+      border-radius: 0px 10px 0px 0px;
+      background: rgba(221, 221, 221, 0.7);
+      border-bottom: thin solid black;
+      width: 100%;
+      height: 6%;
+    }
+
+    .map-overlay .viewTop fieldset {
+      display: none;
+      background-color: rgba(196, 196, 196, .5);
+      border: none;
+      padding: 1.5%;
+      margin: 0;
+      width: 75%;
+      float: left;
+    }
+
+    .map-overlay input {
+      display: block;
+      border: none;
+      width: 100%;
+      border-radius: 3px;
+      padding: 3%;
+      margin: 0;
+      background-color: rgba(255, 255, 255, .5);
+      box-sizing: border-box;
+    }
+
+    .map-overlay .listing {
+      overflow: auto;
+      max-height: 100%;
+    }
+
+    .map-overlay .listing .divListContainer {
+      float: left;
+      width: 95%;
+      padding: 5px 10px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .map-overlay .listing .divListContainer .observatoryListViewSapn {
+      width: 2%;
+      margin-right: 2%;
+      padding-right: 2%;
+
+    }
+
+    .map-overlay .listing .divListContainer .projectListViewSpan {
+      width: 2%;
+      margin-right: 2%;
+      padding-right: 2%;
+
+    }
+
+    .map-overlay .listing .divListContainer a {
+      width: 70%;
+    }
+
+    .map-overlay .listing .divListContainer .dummyDiv {
+      width: 100%;
+      height: 100px;
+    }
+
+    .map-overlay .divContainer {
+      float: left;
+      width: 45%;
+      height: 150px;
+      padding: 1%;
+      margin: 1%;
+      background-color: #fff;
+    }
+
+    .divImgContainer {
+      margin: 2%;
+      height: 120px;
+      text-align: center;
+      object-fit: cover;
+    }
+
+    .divImgContainer img {
+      width: 100%;
+      height: 120px;
+    }
+
+    .divContainer:hover .divTextContainer {
+      opacity: .6;
+    }
+
+    .divContainer:hover {
+      box-shadow: 5px 5px 5px grey;
+      cursor: pointer;
+    }
+
+    .divContainer:hover img {
+      opacity: 0.5;
+    }
+
+    .divNameContainer {
+      margin: 2%;
+      padding-left: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background-color: #fff;
+    }
+
+    .divSpanContainer {
+      margin: 2%;
+      padding-left: 2px;
+      height: 10%;
+      background-color: #fff;
+    }
+
+    .map-overlay .listing .divContainer .divSpanContainer .projectThumbnailViewSpan {
+      width: 10%;
+      height: 100%;
+      margin-right: 2%;
+      padding-right: 5%;
+    }
+
+    .divTextContainer {
+      transition: .5s ease;
+      opacity: 0;
+      top: 50%;
+      left: 50%;
+      transform: translate(0, -95px);
+      text-align: center;
+    }
+
+    .divText {
+      color: white;
+      font-size: 15px;
+    }
+
+    .map-overlay .divItemDetailsContainer {
+      margin: 2%;
+      background-color: rgba(221, 221, 221, .9);
+      padding-bottom: 2px;
+    }
+
+    .divImgDetailsContainer {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .divImgDetailsContainer img {
+      width: 100%;
+      height: 200px;
+    }
+
+    .divNameDetailsContainer {
+      margin: 2%;
+      padding-left: 2px;
+      overflow: hidden;
+      background-color: #dddddd;
+    }
+
+    .divTextDetailsContainer {
+      margin: 2%;
+      padding-left: 2px;
+      overflow: hidden;
+      background-color: #dddddd;
+    }
+
+    .divProjectDetailsContainer {
+      margin: 2%;
+      padding-left: 2px;
+      overflow: hidden;
+      background-color: #dddddd;
+    }
+
+    .divCoIDetailsContainer {
+      margin: 2%;
+      padding-left: 2px;
+      overflow: hidden;
+      background-color: #dddddd;
+    }
+
+    .divLinkDetailsContainer {
+      margin: 2%;
+      padding-left: 2px;
+      overflow: hidden;
+      background-color: #dddddd;
+    }
+
+    #menuMapToggle {
+      background: #fff;
+      opacity: .8;
+      border-radius: .5vw;
+      padding: .5vw;
+      text-align: center;
+      margin: 0px auto 0px;
+      width: 25vw;
+      font-size: .8vw;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    #menuLayerToggle {
+      position: absolute;
+      opacity: .8;
+      z-index: 1;
+      top: 5%;
+      right: 1%;
+      border-radius: 0px 10px 10px 0px;
+      width: 5%;
+      font-family: "Trebuchet MS", Helvetica, sans-serif;
+    }
+
+    #menuLayerToggle a {
+      font-size: .7vw;
+      color: black;
+      display: block;
+      margin: 0;
+      padding: 0;
+      padding: 10%;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+      text-align: center;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    #menuLayerToggle a:last-child {
+      border: none;
+    }
+
+    #menuLayerToggle a:hover {
+      background-color: #f8f8f8;
+      color: black;
+      font-weight: bold;
+    }
+
+    #menuLayerToggle a.active {
+      background-color: #dddddd;
+      color: black;
+      font-weight: bold;
+      font-size: .7vw;
+    }
+
+    #menuLayerToggle a.active:hover {
+      background: #b7b7b7;
+      font-weight: normal;
+    }
+
+    .legendContainer {
+      position: absolute;
+      width: 13%;
+      float: left;
+      bottom: 3%;
+      right: 1%;
+      background-color: rgba(221, 221, 221, .7);
+      border-radius: 10px;
+    }
+
+    .legend {
+      font-size: .7vw;
+      font-family: "Trebuchet MS", Helvetica, sans-serif;
+      padding-bottom: 2%;
+      padding-top: 2%;
+      border-bottom: .2px solid black;
+    }
+
+    .colorPickerClass {
+      font-size: .7vw;
+      font-family: "Trebuchet MS", Helvetica, sans-serif;
+      padding-top: 2%;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .legend h4 {
+      font-size: .8vw;
+      text-align: center;
+      margin: 0 0 5px;
+    }
+
+    .legend div span {
+      display: inline-block;
+      height: 10px;
+      margin-right: 5px;
+      width: 10px;
+      margin-left: 5px;
+    }
+
+    .colorPickerClass h4 {
+      text-align: center;
+      margin: 0 0 5px;
+      font-size: .8vw;
+    }
+  </style>
+
+  <div class="menuLayerToggleContainer">
+    <div style="display: flex;">
+      <div class="menuLayerToggleSwitchContainer" style="display:inline; width: 30%; border-bottom:.2px solid black;">
+        <label class="switch" id="switchBasinLayer">
+          <input type="checkbox" id="input1" checked>
+          <span class="slider round" id="slider1" onClick="showHideBasinLayer()"></span>
+        </label>
+      </div>
+      <div id="layerName1"
+        style="display:inline; width: 70%; background-color: rgba(221,221,221,0.8); padding: 5%; font-size:1vw; border-radius: 0px 10px 10px 0px; border-bottom:.5px solid black; font-family: Trebuchet MS, Helvetica, sans-serif; font-weight: bold;">
+        Basin</div>
+    </div>
+    <div style="display: flex;">
+      <div class="menuLayerToggleSwitchContainer" style="display:inline; width: 30%; ">
+        <label class="switch" id="switchObservatoryLayer">
+          <input type="checkbox" id="input2" checked>
+          <span class="slider round" id="slider2" onClick="showHideObservatoryLayer()"></span>
+        </label>
+      </div>
+      <div id="layerName2" style="display:inline; width: 70%; background-color: rgba(221,221,221,0.8); padding: 5%; font-size:1vw; border-radius: 0px 10px 10px 0px; font-family: Trebuchet MS, Helvetica, sans-serif; font-weight: bold;">Research Site
+      </div>
+    </div>
+  </div>
+
+  <nav id="layerItemsViewToggle"></nav>
+
+  <div id="map"></div>
+  <div class="ctrlScrollprompt"
+    style="position:absolute; display:none;text-align: center;width: 100%; height: 55%;padding-top: 45vh; background-color:rgba(221,221,221,0.3); font-size: 2vw; font-family: Trebuchet MS, Helvetica, sans-serif; color: white;"> Press Ctrl + Scroll to
+    zoom the map </div>
+
+  <div id="menuMapToggle"> <b>Base Map</b> <br>
+    <input id="streets-v11" type="radio" name="rtoggle" value="streets" onClick="switchBaseMap(1)" />
+    <label for="streets-v11">Streets</label>
+    <input id="light-v10" type="radio" name="rtoggle" value="light" onClick="switchBaseMap(2)" />
+    <label for="light-v10">Light</label>
+    <input id="dark-v10" type="radio" name="rtoggle" value="dark" onClick="switchBaseMap(3)" />
+    <label for="dark-v10">Dark</label>
+    <input id="outdoors-v11" type="radio" name="rtoggle" value="outdoors" onClick="switchBaseMap(4)" />
+    <label for="outdoors-v11">Outdoors</label>
+    <input id="satellite-custom" type="radio" name="rtoggle" value="satellite-custom" onClick="switchBaseMap(5)" />
+    <label for="satellite-custom">Satellite</label>
+    <input id="custom" type="radio" name="rtoggle" value="custom" checked="checked" onClick="switchBaseMap(6)" />
+    <label for="custom">Custom</label>
+  </div>
+
+  <div class="map-overlay" id="sidebar">
+
+    <div class="viewTop">
+      <fieldset>
+        <input id="feature-filter" type="text" placeholder="Filter results by research site name" />
+      </fieldset>
+
+      <div id="thumbnailViewButton" onclick="showThumbnailView()">
+        <div class="thumbnailViewButtonBoxes" id="thumbnailViewButtonBoxes1"></div>
+        <div class="thumbnailViewButtonBoxes" id="thumbnailViewButtonBoxes2"></div>
+        <div class="thumbnailViewButtonBoxes" id="thumbnailViewButtonBoxes3"></div>
+        <div class="thumbnailViewButtonBoxes" id="thumbnailViewButtonBoxes4"></div>
+      </div>
+      <div id="listViewButton" onclick="showListView()">
+        <div class="listViewButtonLines" id="listViewButtonLines1"></div>
+        <div class="listViewButtonLines" id="listViewButtonLines2"></div>
+        <div class="listViewButtonLines" id="listViewButtonLines3"></div>
+        <div class="listViewButtonLines" id="listViewButtonLines4"></div>
+      </div>
+    </div>
+
+    <div id="feature-listing" class="listing">
+    </div>
+
+  </div>
+
+  <div id="basinlegendContainer" class="legendContainer">
+    <div id="basin-legend" class="legend">
+      <h4>Major River Basins</h4>
+      <div><span id="legendspan1"></span>Yukon River Basin</div>
+      <div><span id="legendspan2"></span>Mackenzie River Basin</div>
+      <div><span id="legendspan3"></span>Churchill River Basin</div>
+      <div><span id="legendspan4"></span>Fraser River Basin</div>
+      <div><span id="legendspan5"></span>Columbia River basin</div>
+      <div><span id="legendspan6"></span>Nelson-Saskatchewan River Basin</div>
+      <div><span id="legendspan7"></span>St. Lawrence River Basin</div>
+      <div><span id="legendspan8"></span>Saint. John River Basin</div>
+    </div>
+
+    <div id="colorPicker" class="colorPickerClass">
+      <h4>Basin Color Palette</h4>
+      <input type="radio" name="edit" value="A" onclick="colorPaletteChange(1)">1
+      <input type="radio" name="edit" value="B" onclick="colorPaletteChange(2)">2
+      <input type="radio" name="edit" value="A" onclick="colorPaletteChange(3)">3
+      <input type="radio" name="edit" value="B" onclick="colorPaletteChange(4)">4
+      <input type="radio" name="edit" value="C" onclick="colorPaletteChange(5)">5
+      <input type="radio" name="edit" value="A" onclick="colorPaletteChange(6)">6
+      <input type="radio" name="edit" value="C" checked="checked" onclick="colorPaletteChange(7)">7
+    </div>
+  </div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGFzbmF0MTI5NyIsImEiOiJja2gyZmozN3EwMm0xMnlxcnJlNjE2ZXIyIn0.JGVcpK9BELAP1RAtMrELtA';
+    var map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/hasnat1297/ckh4bxpbr02j619lbwyc5r1jv',
+      center: [-118.018093, 58.321212],
+      zoom: 3.2,
+      maxZoom: 15,
+      minZoom: 2.5
+    });
+
+    // switch to any of the given basemaps on user click
+    function switchBaseMap(m) {
+      if (m == 1) {
+        map.setStyle('mapbox://styles/mapbox/streets-v11');
+      } else if (m == 2) {
+        map.setStyle('mapbox://styles/mapbox/light-v10');
+      } else if (m == 3) {
+        map.setStyle('mapbox://styles/mapbox/dark-v10');
+      } else if (m == 4) {
+        map.setStyle('mapbox://styles/mapbox/outdoors-v11');
+      } else if (m == 5) {
+        map.setStyle('mapbox://styles/hasnat1297/ckh8lxbs30ltw19muxkx3awoo');
+      } else if (m == 6) {
+        map.setStyle('mapbox://styles/hasnat1297/ckh4bxpbr02j619lbwyc5r1jv');
+      }
+    }
+
+    //legend color palettes
+    colorPalette0 = ['#5DADE2', '#73C6B6', '#b30086', '#F7DC6F', '#EB984E', '#A93226', '#884EA0', '#154360'];
+    colorPalette1 = ['#7fc97f', '#beaed4', '#fdc086', '#ffff99', '#386cb0', '#f0027f', '#bf5b17', '#666666'];
+    colorPalette2 = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d', '#666666'];
+    colorPalette3 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00'];
+    colorPalette4 = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33', '#a65628', '#f781bf'];
+    colorPalette5 = ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494', '#b3b3b3'];
+    colorPalette6 = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5'];
+    colorPalette7 = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33', '#fdbf6f', '#e7298a'];
+    //use colorPalette7 as default
+    colorPalette = colorPalette7;
+
+    //legend color update: change the sapn color
+    function legendColorUpdate() {
+      document.getElementById("legendspan1").style.backgroundColor = colorPalette[0];
+      document.getElementById("legendspan2").style.backgroundColor = colorPalette[1];
+      document.getElementById("legendspan3").style.backgroundColor = colorPalette[2];
+      document.getElementById("legendspan4").style.backgroundColor = colorPalette[3];
+      document.getElementById("legendspan5").style.backgroundColor = colorPalette[4];
+      document.getElementById("legendspan6").style.backgroundColor = colorPalette[5];
+      document.getElementById("legendspan7").style.backgroundColor = colorPalette[6];
+      document.getElementById("legendspan8").style.backgroundColor = colorPalette[7];
+    }
+    legendColorUpdate();
+
+    // changing basin fill colors on color palette change
+    function colorPaletteChange(c) {
+      if (c == 1) {
+        colorPalette = colorPalette1;
+      } else if (c == 2) {
+        colorPalette = colorPalette2;
+      } else if (c == 3) {
+        colorPalette = colorPalette3;
+      } else if (c == 4) {
+        colorPalette = colorPalette4;
+      } else if (c == 5) {
+        colorPalette = colorPalette5;
+      } else if (c == 6) {
+        colorPalette = colorPalette6;
+      } else if (c == 7) {
+        colorPalette = colorPalette7;
+      }
+      updateBasinDataColor();
+      //remove the current basin layer and add the basin layer with the updated color palette
+      map.removeLayer("Basins");
+      map.addLayer({
+        'id': 'Basins',
+        'type': 'fill',
+        'source': 'basinSouce',
+        'layout': {
+          'visibility': 'visible'
+        },
+        'paint': {
+          'fill-color': ['match',
+            ['get', 'NAMRB_EN'],
+            'Yukon',
+            colorPalette[0],
+            'Mackenzie',
+            colorPalette[1],
+            'Churchill',
+            colorPalette[2],
+            'Fraser',
+            colorPalette[3],
+            'Columbia',
+            colorPalette[4],
+            'Nelson',
+            colorPalette[5],
+            'St. Lawrence',
+            colorPalette[6],
+            'Saint John',
+            colorPalette[7],
+            //other
+            '#A93226',
+          ],
+          'fill-opacity': basinFillOpacity,
+          'fill-outline-color': 'black',
+        }
+      });
+      //remove the current site layer and add it again, overlapping the basin layer
+      map.removeLayer("Observatory");
+      map.addLayer({
+        'id': 'Observatory',
+        'source': 'observatorySource',
+        'type': 'circle',
+        // 'generateId': 'true',
+        layout: {
+          'visibility': 'visible'
+        },
+        paint: {
+          'circle-color': [
+            'match',
+            ['get', 'BasinLocation'],
+            'Yukon',
+            colorPalette[0],
+            'Mackenzie',
+            colorPalette[1],
+            'Churchill',
+            colorPalette[2],
+            'Fraser',
+            colorPalette[3],
+            'Columbia',
+            colorPalette[4],
+            'Nelson',
+            colorPalette[5],
+            'St. Lawrence',
+            colorPalette[6],
+            'Saint John',
+            colorPalette[7],
+            //other
+            '#ccc'
+          ],
+          // 'circle-radius': 4,
+          'circle-radius': {
+            "stops": [
+              [3, 4],
+              // zoom is 5 -> circle radius will be 1px
+              [5, 6],
+              // zoom is 10 -> circle radius will be 2px
+              [7, 8],
+              [9, 10],
+              [11, 12]
+            ]
+          },
+          'circle-stroke-width': 2,
+          'circle-stroke-color': 'black',
+        }
+      });
+      legendColorUpdate();
+      displayFilteredList();
+    }
+
+    var basinObjects = {};
+    var numberOfBasins = 0;
+    var basinFillOpacity = 0.4;
+
+    var observatoryLayer = 1;
+    var observatoryClickActive = 0;
+
+    var observatoryView = 0;
+    var projectView = 1;
+    var listView = 0;
+    var thumbnailView = 1;
+
+
+    // return the rgb color components with a given opacity
+    function hexToRGBa(h) {
+      let r = 0,
+        g = 0,
+        b = 0;
+
+      // 3 digits
+      if (h.length == 4) {
+        r = "0x" + h[1] + h[1];
+        g = "0x" + h[2] + h[2];
+        b = "0x" + h[3] + h[3];
+
+        // 6 digits
+      } else if (h.length == 7) {
+        r = "0x" + h[1] + h[2];
+        g = "0x" + h[3] + h[4];
+        b = "0x" + h[5] + h[6];
+      }
+
+      return "rgba(" + +r + "," + +g + "," + +b + "," + basinFillOpacity + ")";
+      // return [+r,+g,+b];
+    }
+    function hexToRGBaListHover(h, opac) {
+      let r = 0,
+        g = 0,
+        b = 0;
+
+      // 3 digits
+      if (h.length == 4) {
+        r = "0x" + h[1] + h[1];
+        g = "0x" + h[2] + h[2];
+        b = "0x" + h[3] + h[3];
+
+        // 6 digits
+      } else if (h.length == 7) {
+        r = "0x" + h[1] + h[2];
+        g = "0x" + h[3] + h[4];
+        b = "0x" + h[5] + h[6];
+      }
+
+      return "rgba(" + +r + "," + +g + "," + +b + "," + opac + ")";
+      // return [+r,+g,+b];
+    }
+
+    // Create a popup, but don't add it to the map yet.
+    var popup = new mapboxgl.Popup({
+      closeButton: false
+    });
+
+    var filterEl = document.getElementById('feature-filter');
+    var listingEl = document.getElementById('feature-listing');
+
+    // load basin geojson and put the name, coordinates and color into an object
+    function getBasinData() {
+      // load basin geojson and put the name, coordinates and color into an object
+      $.getJSON("GWFbasins_v3.json", function(json) {
+        var x;
+        for (x = 0; x < json.features.length; x++) {
+          var colorchosen;
+          if (json.features[x].properties.NAMRB_EN == 'Yukon') {
+            colorchosen = colorPalette[0];
+          } else if (json.features[x].properties.NAMRB_EN == 'Mackenzie') {
+            colorchosen = colorPalette[1];
+          } else if (json.features[x].properties.NAMRB_EN == 'Churchill') {
+            colorchosen = colorPalette[2];
+          } else if (json.features[x].properties.NAMRB_EN == 'Fraser') {
+            colorchosen = colorPalette[3];
+          } else if (json.features[x].properties.NAMRB_EN == 'Columbia') {
+            colorchosen = colorPalette[4];
+          } else if (json.features[x].properties.NAMRB_EN == 'Nelson') {
+            colorchosen = colorPalette[5];
+          } else if (json.features[x].properties.NAMRB_EN == 'St. Lawrence') {
+            colorchosen = colorPalette[6];
+          } else if (json.features[x].properties.NAMRB_EN == 'Saint John') {
+            colorchosen = colorPalette[7];
+          }
+          basinObjects[x] = {
+            'name': json.features[x].properties.NAMRB_EN,
+            'color': colorchosen,
+            'coordinates': json.features[x].geometry.coordinates
+          };
+        }
+        numberOfBasins = x;
+        console.log('Number of Basins: ', numberOfBasins);
+        console.log('Basin objects: ', basinObjects);
+      });
+    }
+    getBasinData();
+
+    //update basin data object after color palette change
+    function updateBasinDataColor() {
+      for (var x = 0; x < numberOfBasins; x++) {
+        if (basinObjects[x].name == 'Yukon') {
+          basinObjects[x].color = colorPalette[0];
+        } else if (basinObjects[x].name == 'Mackenzie') {
+          basinObjects[x].color = colorPalette[1];
+        } else if (basinObjects[x].name == 'Churchill') {
+          basinObjects[x].color = colorPalette[2];
+        } else if (basinObjects[x].name == 'Fraser') {
+          basinObjects[x].color = colorPalette[3];
+        } else if (basinObjects[x].name == 'Columbia') {
+          basinObjects[x].color = colorPalette[4];
+        } else if (basinObjects[x].name == 'Nelson') {
+          basinObjects[x].color = colorPalette[5];
+        } else if (basinObjects[x].name == 'St. Lawrence') {
+          basinObjects[x].color = colorPalette[6];
+        } else if (basinObjects[x].name == 'Saint John') {
+          basinObjects[x].color = colorPalette[7];
+        }
+      }
+    }
+
+    //sort the project/site names alphabetically
+    function sortWithIndeces(toSort) {
+      for (var i = 0; i < toSort.length; i++) {
+        toSort[i] = [toSort[i], i];
+      }
+      toSort.sort(function(left, right) {
+        return left[0] < right[0] ? -1 : 1;
+      });
+      toSort.sortIndices = [];
+      for (var j = 0; j < toSort.length; j++) {
+        toSort.sortIndices.push(toSort[j][1]);
+        toSort[j] = toSort[j][0];
+      }
+      // return toSort;
+    }
+
+    //toggle basin layer display: function triggers on topright layer slider change
+    function showHideBasinLayer() {
+      if (document.getElementById("input1").checked == true) {
+        // hide basin layer
+        console.log("Basin Layer has been hidden");
+        map.setLayoutProperty('Basins', 'visibility', 'none');
+        document.getElementById("basinlegendContainer").style.display = "none";
+        document.getElementById("layerName1").style.fontWeight = "normal";
+        displayFilteredList();
+      } else {
+        // hide basin layer
+        console.log("Basin Layer has been made Visible");
+        map.setLayoutProperty('Basins', 'visibility', 'visible');
+        document.getElementById("basinlegendContainer").style.display = "block";
+        document.getElementById("layerName1").style.fontWeight = "bold";
+        displayFilteredList();
+      }
+    }
+
+    //toggle site layer display: function triggers on topright layer slider change
+    function showHideObservatoryLayer() {
+      if (document.getElementById("input2").checked == true) {
+        //currently visible, hide site layer
+        observatoryLayer = 0;
+        document.getElementById("layerName2").style.fontWeight = "normal";
+        //remove the current layer
+        map.removeLayer("Observatory");
+        //add again, but this time, make the circles too small to be visible
+        map.addLayer({
+          'id': 'Observatory',
+          'source': 'observatorySource',
+          'type': 'circle',
+          layout: {
+            'visibility': 'visible'
+          },
+          paint: {
+            'circle-color': 'black',
+            'circle-radius': 0.5,
+            'circle-stroke-width': 0,
+          }
+        });
+        // a red circle is drawn but the site layer is hidden
+        // add control to the red layer for clicking to close the red layers
+        if(observatoryClickActive == 1){
+          map.removeLayer('ObservatoryClickedLayer');
+          map.addLayer({
+            id: 'ObservatoryClickedLayer',
+            source: 'observatorySource',
+            type: 'circle',
+            filter: ["==", "Site", siteclicked],
+            paint: {
+              'circle-color': 'red',
+              'circle-radius': {
+                "stops": [
+                  // zoom is 3 -> circle radius will be 5px
+                  [3, 5],
+                  // zoom is 5 -> circle radius will be 7px
+                  [5, 7],
+                  // zoom is 10 -> circle radius will be 9px
+                  [7, 9],
+                  [9, 11],
+                  [11, 13]
+                ]
+              },
+              'circle-stroke-width': 2,
+              'circle-stroke-color': 'black',
+            }
+          });
+          map.on('mousemove', 'ObservatoryClickedLayer', function(e) {
+            // Change the cursor style as a UI indicator.
+            map.getCanvas().style.cursor = 'pointer';
+
+            // Populate the popup and set its coordinates based on the feature.
+            var feature = e.features[0];
+            popup
+              .setLngLat(feature.geometry.coordinates)
+              .setText(feature.properties.Site)
+              .addTo(map);
+          });
+          map.on('mouseleave', 'ObservatoryClickedLayer', function() {
+            map.getCanvas().style.cursor = '';
+            popup.remove();
+          });
+          map.on('click','ObservatoryClickedLayer',function(e){
+            observatoryClickActive = 0;
+            siteclicked = "";
+            map.removeLayer('ObservatoryClickedLayer');
+            displayFilteredList();
+            listingEl.scrollTop = 0;
+          });
+        }
+      } else {
+        // currently hidden, show site layer
+        observatoryLayer = 1;
+        map.setLayoutProperty('Observatory', 'visibility', 'visible');
+        document.getElementById("layerName2").style.fontWeight = "bold";
+        map.removeLayer("Observatory");
+        map.addLayer({
+          'id': 'Observatory',
+          'source': 'observatorySource',
+          'type': 'circle',
+          // 'generateId': 'true',
+          layout: {
+            'visibility': 'visible'
+          },
+          paint: {
+            'circle-color': [
+              'match',
+              ['get', 'BasinLocation'],
+              'Yukon',
+              colorPalette[0],
+              'Mackenzie',
+              colorPalette[1],
+              'Churchill',
+              colorPalette[2],
+              'Fraser',
+              colorPalette[3],
+              'Columbia',
+              colorPalette[4],
+              'Nelson',
+              colorPalette[5],
+              'St. Lawrence',
+              colorPalette[6],
+              'Saint John',
+              colorPalette[7],
+              //other
+              '#ccc'
+            ],
+            // 'circle-radius': 4,
+            'circle-radius': {
+              "stops": [
+                [3, 4],
+                // zoom is 5 -> circle radius will be 1px
+                [5, 6],
+                // zoom is 10 -> circle radius will be 2px
+                [7, 8],
+                [9, 10],
+                [11, 12]
+              ]
+            },
+            'circle-stroke-width': 2,
+            'circle-stroke-color': 'black',
+          }
+        });
+        if(observatoryClickActive == 1){
+          // a red circle is drawn but the site layer just got visible hiding the red circle
+          // remove the overlapped red layer and add again on the top of site layer
+          map.removeLayer('ObservatoryClickedLayer');
+          map.addLayer({
+            id: 'ObservatoryClickedLayer',
+            source: 'observatorySource',
+            type: 'circle',
+            filter: ["==", "Site", siteclicked],
+            paint: {
+              'circle-color': 'red',
+              'circle-radius': {
+                "stops": [
+                  [3, 5],
+                  // zoom is 5 -> circle radius will be 1px
+                  [5, 7],
+                  // zoom is 10 -> circle radius will be 2px
+                  [7, 9],
+                  [9, 11],
+                  [11, 13]
+                ]
+              },
+              'circle-stroke-width': 2,
+              'circle-stroke-color': 'black',
+            }
+          });
+        }
+        // displayFilteredList();
+      }
+    }
+
+    //switch to list subview of the current view (project or site)
+    //add css to list and thumbnail view icon
+    function showListView() {
+      listView = 1;
+      thumbnailView = 0;
+      document.getElementById("listViewButtonLines1").style.backgroundColor = 'black';
+      document.getElementById("listViewButtonLines2").style.backgroundColor = 'black';
+      document.getElementById("listViewButtonLines3").style.backgroundColor = 'black';
+      document.getElementById("listViewButtonLines4").style.backgroundColor = 'black';
+      document.getElementById("thumbnailViewButtonBoxes1").style.backgroundColor = 'white';
+      document.getElementById("thumbnailViewButtonBoxes2").style.backgroundColor = 'white';
+      document.getElementById("thumbnailViewButtonBoxes3").style.backgroundColor = 'white';
+      document.getElementById("thumbnailViewButtonBoxes4").style.backgroundColor = 'white';
+      displayFilteredList();
+    }
+
+    //switch to thumbnail subview of the current view (project or site)
+    //add css to list and thumbnail view icon
+    function showThumbnailView() {
+      listView = 0;
+      thumbnailView = 1;
+      document.getElementById("listViewButtonLines1").style.backgroundColor = 'white';
+      document.getElementById("listViewButtonLines2").style.backgroundColor = 'white';
+      document.getElementById("listViewButtonLines3").style.backgroundColor = 'white';
+      document.getElementById("listViewButtonLines4").style.backgroundColor = 'white';
+      document.getElementById("thumbnailViewButtonBoxes1").style.backgroundColor = 'black';
+      document.getElementById("thumbnailViewButtonBoxes2").style.backgroundColor = 'black';
+      document.getElementById("thumbnailViewButtonBoxes3").style.backgroundColor = 'black';
+      document.getElementById("thumbnailViewButtonBoxes4").style.backgroundColor = 'black';
+      displayFilteredList();
+    }
+
+    //get site images
+    function getObservatoryListingImage(sitename) {
+      if (sitename == "Havikpak Creek") {
+        return "images/Havikpak Creek.jpg"
+      } else if (sitename == "Trail Valley Creek") {
+        return "images/Trail Valley Creek.jpg"
+      } else if (sitename == "Baker Creek") {
+        return "images/Baker Creek.jpg"
+      } else if (sitename == "Boreal Ecosystem Research and Monitoring Sites (BERMS), White Gull Creek, SK") {
+        return "images/BERMS 1.PNG"
+      } else if (sitename == "Brintnell-Bologna Icefield") {
+        return "images/Brintnell-Bologna Icefield.jpg"
+      } else if (sitename == "Columbia Icefield") {
+        return "images/Columbia Icefield.jpg"
+      } else if (sitename == "Kenaston/Brightwater Creek Mesonet Site") {
+        return "images/Kenaston.jpg"
+      } else if (sitename == "Lake O'Hara") {
+        return "images/Lake OHara 1.PNG"
+      } else if (sitename == "Marmot Creek Research Basin") {
+        return "images/Marmot Creek.jpg"
+      } else if (sitename == "Scotty Creek") {
+        return "images/Scotty Creek.jpg"
+      } else if (sitename == "St. Denis National Wildlife Area") {
+        return "images/St Denis.jpg"
+      } else if (sitename == "Wapta Icefield/Peyto Glacier") {
+        return "images/Wapta Icefield.jpg"
+      } else if (sitename == "West Nose Creek") {
+        return "images/West Nose Creek.PNG"
+      } else if (sitename == "Wolf Creek Research Basin") {
+        return "images/Wolf Creek.jpg"
+      } else {
+        return "images/GWF.png"
+      }
+    }
+
+    //get project images
+    function getProjectListingImage(sitename) {
+      if (sitename == "Southern Forests Water Futures") {
+        return "projectImages/Southern Forests Water Futures.jpg"
+      } else if (sitename == "Prairie Drainage Governance") {
+        return "projectImages/Prairie Drainage Governance.jpg"
+      } else if (sitename == "Global Water Citizenship: Integrating Networked Citizens, Scientists and Local Decision Makers") {
+        return "projectImages/Global Water Citizenship.jpg"
+      } else if (sitename == "SPADE: Storms and Precipitation Across the Continental Divide Experiment") {
+        return "projectImages/SPADE.jpg"
+      } else if (sitename == "Climate-Related Precipitation Extremes") {
+        return "projectImages/Climate-Related Precipitation Extremes.jpg"
+      } else if (sitename == "Northern Water Futures") {
+        return "projectImages/Northern Water Futures.jpg"
+      } else if (sitename == "FORMBLOOM") {
+        return "projectImages/FORMBLOOM.jpg"
+      } else if (sitename == "Agricultural Water Futures") {
+        return "projectImages/Agricultural Water Futures.png"
+      } else if (sitename == "Boreal Water Futures") {
+        return "projectImages/Boreal Water Futures.jpg"
+      } else if (sitename == "Prairie Water") {
+        return "projectImages/Prairie Water.png"
+      } else if (sitename == "Integrated Modelling Program for Canada") {
+        return "projectImages/Integrated Modelling Program for Canada.jpg"
+      } else if (sitename == "Mountain Water Futures") {
+        return "projectImages/Mountain Water Futures.jpg"
+      } else if (sitename == "Lake Futures") {
+        return "projectImages/Lake Futures.png"
+      } else if (sitename == "Transformative Sensor Technologies and Smart Watersheds") {
+        return "projectImages/Transformative Sensor Technologies and Smart Watersheds.jpg"
+      } else {
+        return "projectImages/GWF.png"
+      }
+    }
+
+    function normalize(string) {
+      return string.trim().toLowerCase();
+    }
+
+    //***** IMPORTANT: display the rendered listings
+    function displayFilteredList() {
+      if (observatoryView == 1) {
+        var features = map.queryRenderedFeatures({
+          layers: ['Observatory']
+        });
+        var siteNames = [];
+        var featuresSorted = [];
+        if (features) {
+          // console.log('features before sorting: ', features);
+          for (var i = 0; i < features.length; i++) {
+            siteNames[i] = features[i].properties.Site;
+          }
+          //sort the names alphabetically
+          sortWithIndeces(siteNames);
+          // console.log('Site indices sorted: ', siteNames.sortIndices);
+          for (var f = 0; f < features.length; f++) {
+            if(observatoryClickActive == 1 && siteclicked == features[siteNames.sortIndices[f]].properties.Site){
+              featuresSorted[0] = features[siteNames.sortIndices[f]];
+              continue;
+            }
+            featuresSorted[f+1] = features[siteNames.sortIndices[f]];
+          }
+          //dislay the names
+          renderListings(featuresSorted);
+          // Clear the input container
+          filterEl.value = '';
+          // Store the current features in `observatoryList` variable to
+          // later use for filtering on `keyup`.
+          observatoryList = features;
+        }
+      } else if (projectView == 1) {
+        var features = map.queryRenderedFeatures({
+          layers: ['Project']
+        });
+        //each project is a multipoint GeoJSON, therefore when they are rendered, some of them are rendered multiple times- creating duplicates
+        //we need to remove these duplicates before displaying them
+        // console.log('before filtering duplicates:', features);
+        features = features.filter(function(obj, index, self) {
+          return index === self.findIndex(function(t) {
+            return t['id'] === obj['id']
+          });
+        });
+        // console.log('after filtering duplicates:', features);
+        var projectNames = [];
+        var featuresSorted = [];
+        if (features) {
+          // console.log('features before sorting: ', features);
+          for (var i = 0; i < features.length; i++) {
+            projectNames[i] = features[i].properties.ProjectName;
+          }
+          //sort project names
+          sortWithIndeces(projectNames);
+          // console.log('Site indices sorted: ', siteNames.sortIndices);
+          for (var f = 0; f < features.length; f++) {
+            featuresSorted[f] = features[projectNames.sortIndices[f]];
+          }
+          renderListings(featuresSorted);
+          // Clear the input container
+          filterEl.value = '';
+          // Store the current features in `observatoryList` variable to
+          // later use for filtering on `keyup`.
+          projectList = features;
+        }
+      }
+    }
+
+    //***** IMPORTANT: show the listings
+    function renderListings(features) {
+      var empty = document.createElement('p');
+      // Clear any existing listings
+      listingEl.innerHTML = '';
+
+      //show sites
+      if (observatoryView == 1) {
+        document.getElementById("feature-filter").placeholder = "Filter results by research site name";
+        if (features.length) {
+          if (thumbnailView == 1) {
+            //update the view icon colors
+            document.getElementById("listViewButtonLines1").style.backgroundColor = 'white';
+            document.getElementById("listViewButtonLines2").style.backgroundColor = 'white';
+            document.getElementById("listViewButtonLines3").style.backgroundColor = 'white';
+            document.getElementById("listViewButtonLines4").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes1").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes2").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes3").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes4").style.backgroundColor = 'black';
+
+            //take each feature(site) and add them with details sequentially
+            features.forEach(function(feature) {
+              // console.log(feature);
+              var prop = feature.properties;
+              var divItem = document.createElement('div');
+              divItem.className = "divContainer";
+              var divImgItem = document.createElement('div');
+              divImgItem.className = "divImgContainer";
+              var divNameItem = document.createElement('div');
+              divNameItem.className = "divNameContainer";
+              var divTextItem = document.createElement('div');
+              divTextItem.className = "divTextContainer";
+              var imgItem = document.createElement('img');
+              imgItem.src = getObservatoryListingImage(prop.Site);
+              imgItem.className = "divImg";
+              var nameItem = document.createElement('a');
+              nameItem.target = '_blank';
+              nameItem.textContent = prop.Site;
+              var textItem = document.createElement('div');
+              textItem.className = "divText";
+              textItem.innerHTML = "Click to view details";
+
+              //itemColor holds the color of the basin the site belongs to
+              var itemColor = "";
+              if (map.getLayoutProperty('Basins', 'visibility') == 'visible') {
+                if (prop.BasinLocation == 'Yukon') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[0]);
+                  itemColor = hexToRGBa(colorPalette[0]);
+                } else if (prop.BasinLocation == 'Mackenzie') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[1]);
+                  itemColor = hexToRGBa(colorPalette[1]);
+                } else if (prop.BasinLocation == 'Churchill') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[2]);
+                  itemColor = hexToRGBa(colorPalette[2]);
+                } else if (prop.BasinLocation == 'Fraser') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[3]);
+                  itemColor = hexToRGBa(colorPalette[3]);
+                } else if (prop.BasinLocation == 'Columbia') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[4]);
+                  itemColor = hexToRGBa(colorPalette[4]);
+                } else if (prop.BasinLocation == 'Nelson') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[5]);
+                  itemColor = hexToRGBa(colorPalette[5]);
+                } else if (prop.BasinLocation == 'St. Lawrence') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[6]);
+                  itemColor = hexToRGBa(colorPalette[6]);
+                } else if (prop.BasinLocation == 'Saint John') {
+                  divItem.style.backgroundColor = hexToRGBa(colorPalette[7]);
+                  itemColor = hexToRGBa(colorPalette[7]);
+                } else {
+                  divItem.style.backgroundColor = '#ccc';
+                  itemColor = hexToRGBa('#ccc');
+                }
+              }
+
+              divItem.addEventListener('mouseover', function() {
+                divItem.style.opacity = .9;
+                // Highlight corresponding feature on the map
+                popup
+                  .setLngLat(feature.geometry.coordinates)
+                  .setText(feature.properties.Site)
+                  .addTo(map);
+              });
+              divItem.addEventListener('mouseleave', function() {
+                divItem.style.opacity = 1;
+                popup.remove();
+              });
+
+              var divItemDetailsON = 0;
+
+              function showThumbnailItemDetails(){
+                divItemDetailsON = 1;
+                divItem.style.width = '95%';
+                divItem.style.height = 'auto';
+                divImgItem.style.height = '200px';
+                imgItem.style.height = '200px';
+                divItem.removeChild(divItem.lastChild);
+
+                divNameItem.style.whiteSpace = "initial";
+
+                var divItemDetails = document.createElement('div');
+                divItemDetails.className = "divItemDetailsContainer";
+                var divOverviewItemDetails = document.createElement('div');
+                divOverviewItemDetails.className = "divNameDetailsContainer";
+                var divFocusItemDetails = document.createElement('div');
+                divFocusItemDetails.className = "divTextDetailsContainer";
+                var divProjectItemDetails = document.createElement('div');
+                divProjectItemDetails.className = "divProjectDetailsContainer";
+
+                var overviewItemDetails = document.createElement('p');
+                overviewItemDetails.innerHTML = "<b>Overview:</b><br><br>" + prop.Overview;
+
+                var divTextItem = document.createElement('div');
+                divTextItem.className = "divTextContainer";
+                var textItem = document.createElement('div');
+                textItem.className = "divText";
+                textItem.innerHTML = "Click to Collapse";
+                divTextItem.style.transform = 'translate(0, -145px)';
+
+                var focusItemDetails = document.createElement('div');
+                focusItemDetails.className = "divFocusDetails";
+                //prop.CurrentScienceFocusandInstrumentation is a semicolon separated filed ocntaining mutiple bullet points to display
+                //split them and display as bullet points
+                var focusString = prop.CurrentScienceFocusandInstrumentation.split(";");
+                var focusList = document.createElement("ul");
+                for (var s = 0; s < focusString.length; s++) {
+                  var anchor = document.createElement("p");
+                  anchor.innerHTML = focusString[s];
+                  var elem = document.createElement("li");
+                  elem.appendChild(anchor);
+                  focusList.appendChild(elem);
+                }
+                focusItemDetails.innerHTML = "<b>Current Science Focus and Instrumentation</b>";
+                focusItemDetails.appendChild(focusList);
+
+                var projectItemDetails = document.createElement('div');
+                projectItemDetails.className = "divProjectDetails";
+                //prop.Projects is similar to prop.CurrentScienceFocusandInstrumentation, split and display
+                var projectString = prop.Projects.split(";");
+                var projectList = document.createElement("ul");
+                if (projectString.length > 0) {
+                  for (var p = 0; p < projectString.length; p++) {
+                    var anchor = document.createElement("p");
+                    anchor.innerHTML = projectString[p];
+                    var elem = document.createElement("li");
+                    elem.appendChild(anchor);
+                    projectList.appendChild(elem);
+                  }
+                  projectItemDetails.innerHTML = "<b>Project(s)</b>";
+                  projectItemDetails.appendChild(projectList);
+                }
+
+                divTextItem.appendChild(textItem);
+                divItem.appendChild(divTextItem);
+
+                divOverviewItemDetails.appendChild(overviewItemDetails);
+                divFocusItemDetails.appendChild(focusItemDetails);
+                divProjectItemDetails.appendChild(projectItemDetails)
+                divItemDetails.appendChild(divOverviewItemDetails);
+                divItemDetails.appendChild(divFocusItemDetails);
+                divItemDetails.appendChild(divProjectItemDetails);
+
+                divItem.appendChild(divItemDetails);
+              }
+
+              divItem.addEventListener('click', function() {
+                //if a site div is clicked and its details view is not active, activate it to show the full details
+                if (divItemDetailsON == 0) {
+                  showThumbnailItemDetails();
+                }
+                //if a site div is clicked and its details view is active, deactivate it to hide the full details
+                else if (divItemDetailsON == 1) {
+                  divItemDetailsON = 0;
+                  divItem.style.width = '45%';
+                  divItem.style.height = '150px';
+                  divImgItem.style.height = '120px';
+                  imgItem.style.height = '120px';
+                  divItem.removeChild(divItem.lastChild);
+                  divItem.removeChild(divItem.lastChild);
+                  // divItemDetails.innerHTML = '';
+                  divNameItem.style.whiteSpace = "nowrap";
+                  var divTextItem = document.createElement('div');
+                  divTextItem.className = "divTextContainer";
+                  var textItem = document.createElement('div');
+                  textItem.className = "divText";
+                  textItem.innerHTML = "Click to View";
+                  divTextItem.appendChild(textItem);
+                  divItem.appendChild(divTextItem);
+
+                  // if any site was clicked on the map, hide the red circle layer as well
+                  if(observatoryClickActive == 1){
+                    observatoryClickActive = 0;
+                    siteclicked = "";
+                    map.removeLayer('ObservatoryClickedLayer');
+                  }
+                }
+              });
+
+              //add the feature properties serially
+              divImgItem.appendChild(imgItem);
+              divNameItem.appendChild(nameItem);
+              divTextItem.appendChild(textItem);
+              divItem.appendChild(divImgItem);
+              divItem.appendChild(divNameItem);
+              divItem.appendChild(divTextItem);
+
+              //add the feature property container to the main list
+              listingEl.appendChild(divItem);
+
+              //there are two ways to open a site's full details- clicking on the site's summary from the left sidebar or clicking the site on the map
+              //we've already implemented clicking on the site's summary from the left sidebar using 'divItem.addEventListener('click')' just few lines ago
+              //now we implement clicking the site on the map
+              if(observatoryClickActive == 1 && siteclicked == prop.Site){
+                showThumbnailItemDetails();
+              }
+            });
+
+            //add a dummy div at the last of the listing div
+            var divListItem = document.createElement('div');
+            divListItem.className = "divListContainer";
+            divListItem.style.borderBottom = "none";
+            var divDummy = document.createElement('div');
+            divDummy.className = "dummyDiv";
+            divListItem.appendChild(divDummy);
+            listingEl.appendChild(divListItem);
+          }
+          // adding listview with a span on the right matching the basin layer
+          //*****this implementation is same as thumbnail view, read the comments written in the thumbnail view part to match this one
+          if (listView == 1) {
+            //update the view icon colors
+            document.getElementById("listViewButtonLines1").style.backgroundColor = 'black';
+            document.getElementById("listViewButtonLines2").style.backgroundColor = 'black';
+            document.getElementById("listViewButtonLines3").style.backgroundColor = 'black';
+            document.getElementById("listViewButtonLines4").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes1").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes2").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes3").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes4").style.backgroundColor = 'white';
+
+            features.forEach(function(feature) {
+              var prop = feature.properties;
+              var divListItem = document.createElement('div');
+              divListItem.className = "divListContainer";
+              var item = document.createElement('a');
+              item.target = '_blank';
+              item.textContent = prop.Site;
+
+              var itemColor = "";
+              var spanListItem = document.createElement('span');
+              spanListItem.className = "observatoryListViewSapn";
+              if (map.getLayoutProperty('Basins', 'visibility') == 'visible') {
+                if (prop.BasinLocation == 'Yukon') {
+                  spanListItem.style.backgroundColor = colorPalette[0];
+                  itemColor = hexToRGBa(colorPalette[0]);
+                } else if (prop.BasinLocation == 'Mackenzie') {
+                  spanListItem.style.backgroundColor = colorPalette[1];
+                  itemColor = hexToRGBa(colorPalette[1]);
+                } else if (prop.BasinLocation == 'Churchill') {
+                  spanListItem.style.backgroundColor = colorPalette[2];
+                  itemColor = hexToRGBa(colorPalette[2]);
+                } else if (prop.BasinLocation == 'Fraser') {
+                  spanListItem.style.backgroundColor = colorPalette[3];
+                  itemColor = hexToRGBa(colorPalette[3]);
+                } else if (prop.BasinLocation == 'Columbia') {
+                  spanListItem.style.backgroundColor = colorPalette[4];
+                  itemColor = hexToRGBa(colorPalette[4]);
+                } else if (prop.BasinLocation == 'Nelson') {
+                  spanListItem.style.backgroundColor = colorPalette[5];
+                  itemColor = hexToRGBa(colorPalette[5]);
+                } else if (prop.BasinLocation == 'St. Lawrence') {
+                  spanListItem.style.backgroundColor = colorPalette[6];
+                  itemColor = hexToRGBa(colorPalette[6]);
+                } else if (prop.BasinLocation == 'Saint John') {
+                  spanListItem.style.backgroundColor = colorPalette[7];
+                  itemColor = hexToRGBa(colorPalette[7]);
+                } else {
+                  spanListItem.style.backgroundColor = '#ccc';
+                  itemColor = hexToRGBa('#ccc');
+                }
+              }
+
+              divListItem.addEventListener('mouseover', function() {
+                divListItem.style.backgroundColor = hexToRGBaListHover("#dddddd", 0.5);
+                item.style.cursor = 'pointer';
+                popup
+                  .setLngLat(feature.geometry.coordinates)
+                  .setText(feature.properties.Site)
+                  .addTo(map);
+              });
+              divListItem.addEventListener('mouseleave', function() {
+                popup.remove();
+                // item.style.opacity = 1;
+                divListItem.style.backgroundColor = hexToRGBaListHover("#dddddd", 0);;
+              });
+
+              var divItemDetailsON = 0;
+
+              function showListItemDetails(){
+                divItemDetailsON = 1;
+                var divItemDetails = document.createElement('div');
+                divItemDetails.className = "divItemDetailsContainer";
+                divItemDetails.style.backgroundColor = itemColor;
+
+                var divImgItemDetails = document.createElement('div');
+                divImgItemDetails.className = "divImgDetailsContainer";
+                var divOverviewItemDetails = document.createElement('div');
+                divOverviewItemDetails.className = "divNameDetailsContainer";
+                var divFocusItemDetails = document.createElement('div');
+                divFocusItemDetails.className = "divTextDetailsContainer";
+                var divProjectItemDetails = document.createElement('div');
+                divProjectItemDetails.className = "divProjectDetailsContainer";
+
+                var imgItemDetails = document.createElement('img');
+                imgItemDetails.src = getObservatoryListingImage(prop.Site);
+                imgItemDetails.className = "divImgDetails";
+
+                var overviewItemDetails = document.createElement('p');
+                overviewItemDetails.innerHTML = "<b>Overview:</b><br><br>" + prop.Overview;
+
+                var focusItemDetails = document.createElement('div');
+                focusItemDetails.className = "divFocusDetails";
+                var focusString = prop.CurrentScienceFocusandInstrumentation.split(";");
+                var focusList = document.createElement("ul");
+                for (var s = 0; s < focusString.length; s++) {
+                  var anchor = document.createElement("p");
+                  anchor.innerHTML = focusString[s];
+                  var elem = document.createElement("li");
+                  elem.appendChild(anchor);
+                  focusList.appendChild(elem);
+                }
+                focusItemDetails.innerHTML = "<b>Current Science Focus and Instrumentation</b>";
+                focusItemDetails.appendChild(focusList);
+
+                var projectItemDetails = document.createElement('div');
+                projectItemDetails.className = "divProjectDetails";
+                var projectString = prop.Projects.split(";");
+                var projectList = document.createElement("ul");
+                if (projectString.length > 0) {
+                  for (var p = 0; p < projectString.length; p++) {
+                    var anchor = document.createElement("p");
+                    anchor.innerHTML = projectString[p];
+                    var elem = document.createElement("li");
+                    elem.appendChild(anchor);
+                    projectList.appendChild(elem);
+                  }
+                  projectItemDetails.innerHTML = "<b>Project(s)</b>";
+                  projectItemDetails.appendChild(projectList);
+                }
+
+                divImgItemDetails.appendChild(imgItemDetails);
+                divOverviewItemDetails.appendChild(overviewItemDetails);
+                divFocusItemDetails.appendChild(focusItemDetails);
+                divProjectItemDetails.appendChild(projectItemDetails)
+                divItemDetails.appendChild(divImgItemDetails);
+                divItemDetails.appendChild(divOverviewItemDetails);
+                divItemDetails.appendChild(divFocusItemDetails);
+                divItemDetails.appendChild(divProjectItemDetails);
+
+                item.appendChild(divItemDetails);
+              }
+
+              divListItem.addEventListener('click', function() {
+                if (divItemDetailsON == 0) {
+                  showListItemDetails();
+                } else if (divItemDetailsON == 1) {
+                  divItemDetailsON = 0;
+                  item.removeChild(item.lastChild);
+                }
+              });
+
+              divListItem.appendChild(spanListItem);
+              divListItem.appendChild(item);
+              listingEl.appendChild(divListItem);
+
+              if(observatoryClickActive == 1 && siteclicked == prop.Site){
+                showListItemDetails();
+              }
+            });
+
+            //add a dummy div at the last of the listing div
+            var divListItem = document.createElement('div');
+            divListItem.className = "divListContainer";
+            divListItem.style.borderBottom = "none";
+            var divDummy = document.createElement('div');
+            divDummy.className = "dummyDiv";
+            divListItem.appendChild(divDummy);
+            listingEl.appendChild(divListItem);
+          }
+
+          document.getElementById("listViewButton").style.display = "block";
+          document.getElementById("thumbnailViewButton").style.display = "block";
+
+          // Show the filter input
+          filterEl.parentNode.style.display = 'block';
+        } else if (features.length === 0 && filterEl.value !== '') {
+          empty.textContent = 'No results found';
+          listingEl.appendChild(empty);
+        } else {
+          empty.textContent = 'Drag the map to populate results';
+          listingEl.appendChild(empty);
+
+          // Hide the filter input
+          filterEl.parentNode.style.display = 'none';
+
+          // remove features filter
+          map.setFilter('Observatory', ['has', 'Site']);
+        }
+      }
+      //show projects
+      //*****this implementation is same as observatory/site view, read the comments written in the observatory/site view part to match this one
+      else if (projectView == 1) {
+        document.getElementById("feature-filter").placeholder = "Filter results by project name";
+        if (features.length) {
+          if (thumbnailView == 1) {
+            //update the view icon colors
+            document.getElementById("listViewButtonLines1").style.backgroundColor = 'white';
+            document.getElementById("listViewButtonLines2").style.backgroundColor = 'white';
+            document.getElementById("listViewButtonLines3").style.backgroundColor = 'white';
+            document.getElementById("listViewButtonLines4").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes1").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes2").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes3").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes4").style.backgroundColor = 'black';
+
+            features.forEach(function(feature) {
+              var prop = feature.properties;
+              var divItem = document.createElement('div');
+              divItem.className = "divContainer";
+              divItem.style.height = "170px";
+              var divImgItem = document.createElement('div');
+              divImgItem.className = "divImgContainer";
+              var divNameItem = document.createElement('div');
+              divNameItem.className = "divNameContainer";
+              var divSpanItem = document.createElement('div');
+              divSpanItem.className = "divSpanContainer";
+              var divTextItem = document.createElement('div');
+              divTextItem.className = "divTextContainer";
+              var imgItem = document.createElement('img');
+              imgItem.src = getProjectListingImage(prop.ProjectName);
+              imgItem.className = "divImg";
+              var nameItem = document.createElement('a');
+              nameItem.target = '_blank';
+              nameItem.textContent = prop.ProjectName;
+              var textItem = document.createElement('div');
+              textItem.className = "divText";
+              textItem.innerHTML = "Click to view details";
+
+              divItem.addEventListener('mouseover', function() {
+                divItem.style.opacity = .9;
+                if (prop.NumberofSites == 1) {
+                  new mapboxgl.Popup({
+                      closeButton: false,
+                      className: 'projectPopups'
+                    }).setLngLat(feature.geometry.coordinates)
+                    .setText(feature.properties.Site)
+                    .addTo(map);
+                } else if (prop.NumberofSites > 1) {
+                  var projectSiteNames = feature.properties.Site.split(";");
+                  for (var pop = 0; pop < prop.NumberofSites; pop++) {
+                    new mapboxgl.Popup({
+                        closeButton: false,
+                        className: 'projectPopups'
+                      }).setLngLat(feature.geometry.coordinates[pop])
+                      .setText(projectSiteNames[pop])
+                      .addTo(map);
+                  }
+                }
+              });
+              divItem.addEventListener('mouseleave', function() {
+                divItem.style.opacity = 1;
+                $('.projectPopups').remove();
+              });
+              var divItemDetailsON = 0;
+              divItem.addEventListener('click', function() {
+                if (divItemDetailsON == 0) {
+                  divItemDetailsON = 1;
+                  divItem.style.width = '95%';
+                  divItem.style.height = 'auto';
+                  divImgItem.style.height = '200px';
+                  imgItem.style.height = '200px';
+                  divItem.removeChild(divItem.lastChild);
+
+                  divNameItem.style.whiteSpace = "initial";
+
+                  var divItemDetails = document.createElement('div');
+                  divItemDetails.className = "divItemDetailsContainer";
+                  var divOverviewItemDetails = document.createElement('div');
+                  divOverviewItemDetails.className = "divNameDetailsContainer";
+                  var divFocusItemDetails = document.createElement('div');
+                  divFocusItemDetails.className = "divTextDetailsContainer";
+                  var divCoIItemDetails = document.createElement('div');
+                  divCoIItemDetails.className = "divCoIDetailsContainer";
+                  var divProjectItemDetails = document.createElement('div');
+                  divProjectItemDetails.className = "divProjectDetailsContainer";
+                  var divLinkItemDetails = document.createElement('div');
+                  divLinkItemDetails.className = "divLinkDetailsContainer";
+
+                  var overviewItemDetails = document.createElement('p');
+                  overviewItemDetails.innerHTML = "<b>Overview:</b><br><br>" + prop.Overview;
+
+                  var divTextItem = document.createElement('div');
+                  divTextItem.className = "divTextContainer";
+                  var textItem = document.createElement('div');
+                  textItem.className = "divText";
+                  textItem.innerHTML = "Click to Collapse";
+                  divTextItem.style.transform = 'translate(0, -145px)';
+
+                  var focusItemDetails = document.createElement('div');
+                  focusItemDetails.className = "divFocusDetails";
+
+                  var PIString = prop.PI.split(";");
+                  var PIList = document.createElement("ul");
+                  if (PIString.length > 0) {
+                    for (var pi = 0; pi < PIString.length; pi++) {
+                      var anchor = document.createElement("p");
+                      anchor.innerHTML = PIString[pi];
+                      var elem = document.createElement("li");
+                      elem.appendChild(anchor);
+                      PIList.appendChild(elem);
+                    }
+                    focusItemDetails.innerHTML = "<b>Principal Investigator(s)</b>";
+                    focusItemDetails.appendChild(PIList);
+                  }
+
+                  var coIItemDetails = document.createElement('div');
+                  coIItemDetails.className = "divcoIDetails";
+                  var coIString = prop.CoI.split(";");
+                  var coIList = document.createElement("ul");
+                  if (coIString.length > 1) {
+                    for (var c = 0; c < coIString.length; c++) {
+                      var anchor = document.createElement("p");
+                      anchor.innerHTML = coIString[c];
+                      var elem = document.createElement("li");
+                      elem.appendChild(anchor);
+                      coIList.appendChild(elem);
+                    }
+                    coIItemDetails.innerHTML = "<b>Co-Investigator(s)</b>";
+                    coIItemDetails.appendChild(coIList);
+                  }
+
+                  var projectItemDetails = document.createElement('div');
+                  projectItemDetails.className = "divProjectDetails";
+                  var projectString = prop.Site.split(";");
+                  var projectList = document.createElement("ul");
+                  if (projectString.length > 0) {
+                    for (var p = 0; p < projectString.length; p++) {
+                      var anchor = document.createElement("p");
+                      anchor.innerHTML = projectString[p];
+                      var elem = document.createElement("li");
+                      elem.appendChild(anchor);
+                      projectList.appendChild(elem);
+                    }
+                    projectItemDetails.innerHTML = "<b>Site(s)</b>";
+                    projectItemDetails.appendChild(projectList);
+                  }
+
+                  var LinkItemDetails = document.createElement('a');
+                  LinkItemDetails.target = '_blank';
+                  LinkItemDetails.href = prop.URL;
+                  LinkItemDetails.textContent = "\tMore Info";
+
+                  divTextItem.appendChild(textItem);
+                  divItem.appendChild(divTextItem);
+
+                  divOverviewItemDetails.appendChild(overviewItemDetails);
+                  divFocusItemDetails.appendChild(focusItemDetails);
+                  divCoIItemDetails.appendChild(coIItemDetails);
+                  divProjectItemDetails.appendChild(projectItemDetails);
+                  divLinkItemDetails.appendChild(LinkItemDetails);
+
+                  divItemDetails.appendChild(divOverviewItemDetails);
+                  divItemDetails.appendChild(divFocusItemDetails);
+                  divItemDetails.appendChild(divCoIItemDetails);
+                  divItemDetails.appendChild(divProjectItemDetails);
+                  divItemDetails.appendChild(divLinkItemDetails);
+
+                  divItem.appendChild(divItemDetails);
+                } else if (divItemDetailsON == 1) {
+                  divItemDetailsON = 0;
+                  divItem.style.width = '45%';
+                  divItem.style.height = '170px';
+                  divImgItem.style.height = '120px';
+                  imgItem.style.height = '120px';
+                  divItem.removeChild(divItem.lastChild);
+                  divItem.removeChild(divItem.lastChild);
+
+                  divNameItem.style.whiteSpace = "nowrap";
+                  var divTextItem = document.createElement('div');
+                  divTextItem.className = "divTextContainer";
+                  var textItem = document.createElement('div');
+                  textItem.className = "divText";
+                  textItem.innerHTML = "Click to View";
+                  divTextItem.appendChild(textItem);
+                  divItem.appendChild(divTextItem);
+                }
+              });
+
+              divImgItem.appendChild(imgItem);
+              divNameItem.appendChild(nameItem);
+
+              var itemColor = "";
+              for (sp = 0; sp < prop.NumberofSites; sp++) {
+                var spanItem = document.createElement('span');
+                spanItem.className = "projectThumbnailViewSpan";
+                basinLocationList = prop.BasinLocation.split(";");
+                if (map.getLayoutProperty('Basins', 'visibility') == 'visible') {
+                  if (basinLocationList[sp] == 'Yukon') {
+                    spanItem.style.backgroundColor = colorPalette[0];
+                    itemColor = hexToRGBa(colorPalette[0]);
+                  } else if (basinLocationList[sp] == 'Mackenzie') {
+                    spanItem.style.backgroundColor = colorPalette[1];
+                    itemColor = hexToRGBa(colorPalette[1]);
+                  } else if (basinLocationList[sp] == 'Churchill') {
+                    spanItem.style.backgroundColor = colorPalette[2];
+                    itemColor = hexToRGBa(colorPalette[2]);
+                  } else if (basinLocationList[sp] == 'Fraser') {
+                    spanItem.style.backgroundColor = colorPalette[3];
+                    itemColor = hexToRGBa(colorPalette[3]);
+                  } else if (basinLocationList[sp] == 'Columbia') {
+                    spanItem.style.backgroundColor = colorPalette[4];
+                    itemColor = hexToRGBa(colorPalette[4]);
+                  } else if (basinLocationList[sp] == 'Nelson') {
+                    spanItem.style.backgroundColor = colorPalette[5];
+                    itemColor = hexToRGBa(colorPalette[5]);
+                  } else if (basinLocationList[sp] == 'St. Lawrence') {
+                    spanItem.style.backgroundColor = colorPalette[6];
+                    itemColor = hexToRGBa(colorPalette[6]);
+                  } else if (basinLocationList[sp] == 'Saint John') {
+                    spanItem.style.backgroundColor = colorPalette[7];
+                    itemColor = hexToRGBa(colorPalette[7]);
+                  } else {
+                    spanItem.style.backgroundColor = '#ccc';
+                    itemColor = hexToRGBa('#ccc');
+                  }
+                  // spanItem.style.width = "5px";
+                  // spanItem.style.height = "8px";
+                }
+                divSpanItem.appendChild(spanItem);
+              }
+              divTextItem.appendChild(textItem);
+              divItem.appendChild(divImgItem);
+              divItem.appendChild(divNameItem);
+              divItem.appendChild(divSpanItem);
+              divItem.appendChild(divTextItem);
+              listingEl.appendChild(divItem);
+            });
+
+            //add a dummy div at the last of the listing div
+            var divListItem = document.createElement('div');
+            divListItem.className = "divListContainer";
+            divListItem.style.borderBottom = "none";
+            var divDummy = document.createElement('div');
+            divDummy.className = "dummyDiv";
+            divListItem.appendChild(divDummy);
+            listingEl.appendChild(divListItem);
+          }
+          // adding listview with span/s on the left matching the basin layer
+          if (listView == 1) {
+            //update the view icon colors
+            document.getElementById("listViewButtonLines1").style.backgroundColor = 'black';
+            document.getElementById("listViewButtonLines2").style.backgroundColor = 'black';
+            document.getElementById("listViewButtonLines3").style.backgroundColor = 'black';
+            document.getElementById("listViewButtonLines4").style.backgroundColor = 'black';
+            document.getElementById("thumbnailViewButtonBoxes1").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes2").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes3").style.backgroundColor = 'white';
+            document.getElementById("thumbnailViewButtonBoxes4").style.backgroundColor = 'white';
+
+            features.forEach(function(feature) {
+              var prop = feature.properties;
+              var divListItem = document.createElement('div');
+              divListItem.className = "divListContainer";
+              var item = document.createElement('a');
+              item.target = '_blank';
+              // item.setAttribute('style', 'white-space: pre;');
+              item.setAttribute('style', 'white-space: initial;');
+              var newline = "\r\n";
+              item.textContent = newline + prop.ProjectName;
+
+              var itemColor = "";
+              for (sp = 0; sp < prop.NumberofSites; sp++) {
+                var spanListItem = document.createElement('span');
+                spanListItem.className = "projectListViewSpan";
+                basinLocationList = prop.BasinLocation.split(";");
+                if (map.getLayoutProperty('Basins', 'visibility') == 'visible') {
+                  if (basinLocationList[sp] == 'Yukon') {
+                    spanListItem.style.backgroundColor = colorPalette[0];
+                    itemColor = hexToRGBa(colorPalette[0]);
+                  } else if (basinLocationList[sp] == 'Mackenzie') {
+                    spanListItem.style.backgroundColor = colorPalette[1];
+                    itemColor = hexToRGBa(colorPalette[1]);
+                  } else if (basinLocationList[sp] == 'Churchill') {
+                    spanListItem.style.backgroundColor = colorPalette[2];
+                    itemColor = hexToRGBa(colorPalette[2]);
+                  } else if (basinLocationList[sp] == 'Fraser') {
+                    spanListItem.style.backgroundColor = colorPalette[3];
+                    itemColor = hexToRGBa(colorPalette[3]);
+                  } else if (basinLocationList[sp] == 'Columbia') {
+                    spanListItem.style.backgroundColor = colorPalette[4];
+                    itemColor = hexToRGBa(colorPalette[4]);
+                  } else if (basinLocationList[sp] == 'Nelson') {
+                    spanListItem.style.backgroundColor = colorPalette[5];
+                    itemColor = hexToRGBa(colorPalette[5]);
+                  } else if (basinLocationList[sp] == 'St. Lawrence') {
+                    spanListItem.style.backgroundColor = colorPalette[6];
+                    itemColor = hexToRGBa(colorPalette[6]);
+                  } else if (basinLocationList[sp] == 'Saint John') {
+                    spanListItem.style.backgroundColor = colorPalette[7];
+                    itemColor = hexToRGBa(colorPalette[7]);
+                  } else {
+                    spanListItem.style.backgroundColor = '#ccc';
+                    itemColor = hexToRGBa('#ccc');
+                  }
+                }
+                divListItem.appendChild(spanListItem);
+              }
+
+              divListItem.addEventListener('mouseover', function() {
+                divListItem.style.backgroundColor = hexToRGBaListHover("#dddddd", 0.5);
+                item.style.cursor = 'pointer';
+                if (prop.NumberofSites == 1) {
+                  new mapboxgl.Popup({
+                      closeButton: false,
+                      className: 'projectPopups'
+                    }).setLngLat(feature.geometry.coordinates)
+                    .setText(feature.properties.Site)
+                    .addTo(map);
+                } else if (prop.NumberofSites > 1) {
+                  var projectSiteNames = feature.properties.Site.split(";");
+                  for (var pop = 0; pop < prop.NumberofSites; pop++) {
+                    new mapboxgl.Popup({
+                        closeButton: false,
+                        className: 'projectPopups'
+                      }).setLngLat(feature.geometry.coordinates[pop])
+                      .setText(projectSiteNames[pop])
+                      .addTo(map);
+                  }
+                }
+              });
+              divListItem.addEventListener('mouseleave', function() {
+                $('.projectPopups').remove();
+                divListItem.style.backgroundColor = hexToRGBaListHover("#dddddd", 0);;
+              });
+              var divItemDetailsON = 0;
+              divListItem.addEventListener('click', function() {
+                if (divItemDetailsON == 0) {
+                  divItemDetailsON = 1;
+                  var divItemDetails = document.createElement('div');
+                  divItemDetails.className = "divItemDetailsContainer";
+                  divItemDetails.style.backgroundColor = itemColor;
+
+                  var divImgItemDetails = document.createElement('div');
+                  divImgItemDetails.className = "divImgDetailsContainer";
+                  var divOverviewItemDetails = document.createElement('div');
+                  divOverviewItemDetails.className = "divNameDetailsContainer";
+                  var divFocusItemDetails = document.createElement('div');
+                  divFocusItemDetails.className = "divTextDetailsContainer";
+                  var divCoIItemDetails = document.createElement('div');
+                  divCoIItemDetails.className = "divCoIDetailsContainer";
+                  var divProjectItemDetails = document.createElement('div');
+                  divProjectItemDetails.className = "divProjectDetailsContainer";
+                  var divLinkItemDetails = document.createElement('div');
+                  divLinkItemDetails.className = "divLinkDetailsContainer";
+
+                  var imgItemDetails = document.createElement('img');
+                  imgItemDetails.src = getProjectListingImage(prop.ProjectName);
+                  imgItemDetails.className = "divImgDetails";
+
+                  var overviewItemDetails = document.createElement('p');
+                  overviewItemDetails.innerHTML = "<b>Overview:</b><br><br>" + prop.Overview;
+
+                  var focusItemDetails = document.createElement('div');
+                  focusItemDetails.className = "divFocusDetails";
+                  // focusItemDetails.innerHTML = "<b>Principal Investigator</b>: <br><br>" + prop.PI + "<br><br>";
+                  var PIString = prop.PI.split(";");
+                  var PIList = document.createElement("ul");
+                  if (PIString.length > 0) {
+                    for (var pi = 0; pi < PIString.length; pi++) {
+                      var anchor = document.createElement("p");
+                      anchor.innerHTML = PIString[pi];
+                      var elem = document.createElement("li");
+                      elem.appendChild(anchor);
+                      PIList.appendChild(elem);
+                    }
+                    focusItemDetails.innerHTML = "<b>Principal Investigator(s)</b>";
+                    focusItemDetails.appendChild(PIList);
+                  }
+
+                  var coIItemDetails = document.createElement('div');
+                  coIItemDetails.className = "divcoIDetails";
+                  var coIString = prop.CoI.split(";");
+                  var coIList = document.createElement("ul");
+                  if (coIString.length > 1) {
+                    for (var c = 0; c < coIString.length; c++) {
+                      var anchor = document.createElement("p");
+                      anchor.innerHTML = coIString[c];
+                      var elem = document.createElement("li");
+                      elem.appendChild(anchor);
+                      coIList.appendChild(elem);
+                    }
+                    coIItemDetails.innerHTML = "<b>Co-Investigator(s)</b>";
+                    coIItemDetails.appendChild(coIList);
+                  }
+
+                  var projectItemDetails = document.createElement('div');
+                  projectItemDetails.className = "divProjectDetails";
+                  var projectString = prop.Site.split(";");
+                  var projectList = document.createElement("ul");
+                  if (projectString.length > 0) {
+                    for (var p = 0; p < projectString.length; p++) {
+                      var anchor = document.createElement("p");
+                      anchor.innerHTML = projectString[p];
+                      var elem = document.createElement("li");
+                      elem.appendChild(anchor);
+                      projectList.appendChild(elem);
+                    }
+                    projectItemDetails.innerHTML = "<b>Site(s)</b>";
+                    projectItemDetails.appendChild(projectList);
+                  }
+
+                  var LinkItemDetails = document.createElement('a');
+                  LinkItemDetails.target = '_blank';
+                  LinkItemDetails.href = prop.URL;
+                  LinkItemDetails.textContent = "\tMore Info";
+
+                  divImgItemDetails.appendChild(imgItemDetails);
+                  divOverviewItemDetails.appendChild(overviewItemDetails);
+                  divFocusItemDetails.appendChild(focusItemDetails);
+                  divCoIItemDetails.appendChild(coIItemDetails);
+                  divProjectItemDetails.appendChild(projectItemDetails);
+                  divLinkItemDetails.appendChild(LinkItemDetails);
+
+                  divItemDetails.appendChild(divImgItemDetails);
+                  divItemDetails.appendChild(divOverviewItemDetails);
+                  divItemDetails.appendChild(divFocusItemDetails);
+                  divItemDetails.appendChild(divCoIItemDetails);
+                  divItemDetails.appendChild(divProjectItemDetails);
+                  divItemDetails.appendChild(divLinkItemDetails);
+
+                  item.appendChild(divItemDetails);
+                } else if (divItemDetailsON == 1) {
+                  divItemDetailsON = 0;
+                  item.removeChild(item.lastChild);
+                }
+              });
+
+
+              divListItem.appendChild(item);
+              listingEl.appendChild(divListItem);
+            });
+
+            //add a dummy div at the last of the listing div
+            var divListItem = document.createElement('div');
+            divListItem.className = "divListContainer";
+            divListItem.style.borderBottom = "none";
+            var divDummy = document.createElement('div');
+            divDummy.className = "dummyDiv";
+            divListItem.appendChild(divDummy);
+            listingEl.appendChild(divListItem);
+          }
+
+          document.getElementById("listViewButton").style.display = "block";
+          document.getElementById("thumbnailViewButton").style.display = "block";
+          document.getElementById("sidebar").style.display = "block";
+          document.getElementById("layerItemsViewToggle").style.display = "block";
+
+          // Show the filter input
+          filterEl.parentNode.style.display = 'block';
+        } else if (features.length === 0 && filterEl.value !== '') {
+          empty.textContent = 'No results found';
+          listingEl.appendChild(empty);
+        } else {
+          empty.textContent = 'Drag the map to populate results';
+          listingEl.appendChild(empty);
+
+          // Hide the filter input
+          filterEl.parentNode.style.display = 'none';
+
+          // remove features filter
+          map.setFilter('Project', ['has', 'ProjectName']);
+        }
+      }
+    }
+
+    map.on('style.load', function() {
+
+      map.scrollZoom.disable();
+      map.scrollZoom.setWheelZoomRate(0.02); // Default 1/450
+      //scroll is disabled
+      //show a message when user tries to scroll
+      map.on("wheel", event => {
+        if (event.originalEvent.ctrlKey) { // Check if CTRL key is pressed
+          event.originalEvent.preventDefault(); // Prevent chrome/firefox default behavior
+          if (!map.scrollZoom._enabled) map.scrollZoom.enable(); // Enable zoom only if it's disabled
+        } else {
+          if (map.scrollZoom._enabled) map.scrollZoom.disable(); // Disable zoom only if it's enabled
+          // alert("Press Ctrl + Scroll to zoom the map");
+          var ele = $(".ctrlScrollprompt");
+          ele.show();
+          setTimeout(function() {
+            ele.hide();
+          }, 1000);
+        }
+      });
+
+      //Canadian waterbasins
+      map.addSource('basinSouce', {
+        type: 'geojson',
+        data: 'https://giws-comm.github.io/map/GWFbasins_v3.json',
+        buffer: 5,
+      });
+      map.addLayer({
+        'id': 'Basins',
+        'type': 'fill',
+        'source': 'basinSouce',
+        'layout': {
+          'visibility': 'visible'
+        },
+        'paint': {
+          'fill-color': ['match',
+            ['get', 'NAMRB_EN'],
+            'Yukon',
+            colorPalette[0],
+            'Mackenzie',
+            colorPalette[1],
+            'Churchill',
+            colorPalette[2],
+            'Fraser',
+            colorPalette[3],
+            'Columbia',
+            colorPalette[4],
+            'Nelson',
+            colorPalette[5],
+            'St. Lawrence',
+            colorPalette[6],
+            'Saint John',
+            colorPalette[7],
+            //other
+            '#A93226',
+          ],
+          'fill-opacity': 0.4,
+          'fill-outline-color': 'black',
+        }
+      });
+      //projects: a user can not see them beacuse of tiny cirle radius
+      map.addSource('projectSource', {
+        type: 'geojson',
+        // Point to GeoJSON data.
+        data: 'GWFprojects.json',
+      });
+      map.addLayer({
+        'id': 'Project',
+        'source': 'projectSource',
+        'type': 'circle',
+        // 'generateId': 'true',
+        layout: {
+          'visibility': 'visible'
+        },
+        paint: {
+          'circle-color': 'black',
+          'circle-radius': 0.5,
+          'circle-stroke-width': 0,
+          // 'circle-stroke-color': 'black',
+        }
+      });
+      //research sites
+      map.addSource('observatorySource', {
+        type: 'geojson',
+        // Point to GeoJSON data.
+        data: '2020-Jan6-GWFobservatoriesGeo_withID3.json',
+        // data: 'demo.json'
+        // cluster: true,
+        // clusterMaxZoom: 14, // Max zoom to cluster points on
+        // clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+      });
+      map.addLayer({
+        'id': 'Observatory',
+        'source': 'observatorySource',
+        'type': 'circle',
+        // 'generateId': 'true',
+        layout: {
+          'visibility': 'visible'
+        },
+        paint: {
+          'circle-color': [
+            'match',
+            ['get', 'BasinLocation'],
+            'Yukon',
+            colorPalette[0],
+            'Mackenzie',
+            colorPalette[1],
+            'Churchill',
+            colorPalette[2],
+            'Fraser',
+            colorPalette[3],
+            'Columbia',
+            colorPalette[4],
+            'Nelson',
+            colorPalette[5],
+            'St. Lawrence',
+            colorPalette[6],
+            'Saint John',
+            colorPalette[7],
+            //other
+            '#ccc'
+          ],
+          // 'circle-radius': 4,
+          'circle-radius': {
+            "stops": [
+              [3, 4],
+              // zoom is 5 -> circle radius will be 1px
+              [5, 6],
+              // zoom is 10 -> circle radius will be 2px
+              [7, 8],
+              [9, 10],
+              [11, 12]
+            ]
+          },
+          'circle-stroke-width': 2,
+          'circle-stroke-color': 'black',
+        }
+      });
+
+      // warning: this fires many times per second!
+      map.on('render', afterChangeComplete);
+
+      function afterChangeComplete() {
+        if (!map.loaded()) {
+          return
+        } // still not loaded; bail out.
+
+        // now that the map is loaded, it's safe to query the features:
+        displayFilteredList();
+
+        map.off('render', afterChangeComplete); // remove this handler now that we're done.
+      }
+
+      map.on('moveend', function() {
+        displayFilteredList();
+      });
+
+      //show popup for the site that the mouse is pointing at
+      map.on('mousemove', 'Observatory', function(e) {
+        // Change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        // Populate the popup and set its coordinates based on the feature.
+        var feature = e.features[0];
+        popup
+          .setLngLat(feature.geometry.coordinates)
+          .setText(feature.properties.Site)
+          .addTo(map);
+      });
+      //hide the popup for the site that when the mouse leaves from the site
+      map.on('mouseleave', 'Observatory', function() {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+      });
+
+      //when user clicks a site form the map => show the site's details
+      //when user clicks again => hide the site's details
+      siteclicked = "";
+      map.on('click', 'Observatory', function(e) {
+        //click is possible only when the observatory layer is visible i.e. the sites can be seen as circles
+        if (observatoryLayer == 1) {
+          //if user is at the project view, switch to observatory view and show the details of the clicked site
+          if(projectView == 1){
+            // switch to observatory view and display the clicked site
+            projectView = 0;
+            observatoryView = 1;
+            document.getElementById('researchSiteItemView').className = 'activeView';
+            document.getElementById('projectItemView').className = '';
+          }
+          var coordinates = e.features[0].geometry.coordinates.slice();
+          var site = e.features[0].properties.Site;
+
+          // Ensure that if the map is zoomed out such that
+          // multiple copies of the feature are visible, the
+          // popup appears over the copy being pointed to.
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          if (site != siteclicked) {
+            if (siteclicked == "") {
+              // no site was clicked before, just add a red inner circle to this site location
+              observatoryClickActive = 1;
+              map.addLayer({
+                id: 'ObservatoryClickedLayer',
+                source: 'observatorySource',
+                type: 'circle',
+                filter: ["==", "Site", e.features[0].properties.Site],
+                paint: {
+                  'circle-color': 'red',
+                  'circle-radius': {
+                    "stops": [
+                      [3, 5],
+                      // zoom is 5 -> circle radius will be 1px
+                      [5, 7],
+                      // zoom is 10 -> circle radius will be 2px
+                      [7, 9],
+                      [9, 11],
+                      [11, 13]
+                    ]
+                  },
+                  'circle-stroke-width': 2,
+                  'circle-stroke-color': 'black',
+                }
+              });
+            } else {
+              // another site was clicked before, delete the current layer and add a red inner circle to this new site location
+              map.removeLayer('ObservatoryClickedLayer');
+              map.addLayer({
+                id: 'ObservatoryClickedLayer',
+                source: 'observatorySource',
+                type: 'circle',
+                filter: ["==", "Site", e.features[0].properties.Site],
+                paint: {
+                  'circle-color': 'red',
+                  'circle-radius': {
+                    "stops": [
+                      [3, 5],
+                      // zoom is 5 -> circle radius will be 1px
+                      [5, 7],
+                      // zoom is 10 -> circle radius will be 2px
+                      [7, 9],
+                      [9, 11],
+                      [11, 13]
+                    ]
+                  },
+                  'circle-stroke-width': 2,
+                  'circle-stroke-color': 'black',
+                }
+              });
+            }
+            siteclicked = site;
+          }
+          else {
+            // same site was clicked before, delete the current layer
+            observatoryClickActive = 0;
+            siteclicked = "";
+            map.removeLayer('ObservatoryClickedLayer');
+          }
+          displayFilteredList();
+          //scroll to the top to show the details of the clciked site
+          listingEl.scrollTop = 0;
+        }
+      });
+
+      //for filtering using names: site/project
+      filterEl.addEventListener('keyup', function(e) {
+        if (observatoryView == 1) {
+          var value = normalize(e.target.value);
+
+          // Filter visible features that don't match the input value.
+          var filtered = observatoryList.filter(function(feature) {
+            var name = normalize(feature.properties.Site);
+            return name.indexOf(value) > -1;
+          });
+
+          // Populate the sidebar with filtered results
+          renderListings(filtered);
+
+          // Set the filter to populate features into the layer.
+          if (filtered.length) {
+            map.setFilter('Observatory', [
+              'match',
+              ['get', 'Site'],
+              filtered.map(function(feature) {
+                return feature.properties.Site;
+              }),
+              true,
+              false
+            ]);
+          }
+        } else if (projectView == 1) {
+          var value = normalize(e.target.value);
+
+          // Filter visible features that don't match the input value.
+          var filtered = projectList.filter(function(feature) {
+            var name = normalize(feature.properties.ProjectName);
+            return name.indexOf(value) > -1;
+          });
+
+          // Populate the sidebar with filtered results
+          renderListings(filtered);
+
+          // Set the filter to populate features into the layer.
+          if (filtered.length) {
+            map.setFilter('Project', [
+              'match',
+              ['get', 'ProjectName'],
+              filtered.map(function(feature) {
+                return feature.properties.ProjectName;
+              }),
+              true,
+              false
+            ]);
+          }
+        }
+
+      });
+
+      // enumerate ids of the layers
+      var toggleableLayerItemViewIds = ['Observatory', 'Project'];
+
+      // set up the corresponding toggle button for each layer Item view
+      document.getElementById("layerItemsViewToggle").innerHTML = "";
+      for (var j = 0; j < toggleableLayerItemViewIds.length; j++) {
+        var id2 = toggleableLayerItemViewIds[j];
+        if (id2 == 'Observatory') {
+          var link2 = document.createElement('a');
+          link2.href = '#';
+          link2.className = '';
+          link2.innerHTML = '&nbsp Research Sites &nbsp';
+          link2.id = "researchSiteItemView";
+        }
+        else if (id2 == 'Project') {
+          var link2 = document.createElement('a');
+          link2.href = '#';
+          link2.className = 'activeView';
+          link2.innerHTML = '&nbsp Projects &nbsp';
+          link2.id = "projectItemView";
+        }
+        else {
+          continue;
+        }
+
+        //implement display toggle button for each view: site & project
+        link2.onclick = function(e2) {
+          var clickedLayer2 = this.id;
+          e2.preventDefault();
+          e2.stopPropagation();
+
+          if (clickedLayer2 == 'projectItemView') {
+            console.log('entered project click');
+            if (projectView == 1) {
+              //was visible, now hide
+              projectView = 0;
+              this.className = '';
+              document.getElementById("sidebar").style.display = "none";
+            } else if (projectView == 0) {
+              //was hidden, now show
+              projectView = 1;
+              observatoryView = 0;
+              var v = document.getElementsByClassName('activeView');
+              //keep the clicked button class as 'activeView' and set others classes as ""
+              for (var k = 0; k < v.length; v++) {
+                v[k].className = '';
+              }
+              this.className = 'activeView';
+              document.getElementById("sidebar").style.display = "block";
+              displayFilteredList();
+            }
+          } else if (clickedLayer2 == 'researchSiteItemView') {
+            console.log('entered observatory click');
+            if (observatoryView == 1) {
+              observatoryView = 0;
+              this.className = '';
+              document.getElementById("sidebar").style.display = "none";
+            } else if (observatoryView == 0) {
+              projectView = 0;
+              observatoryView = 1;
+              var v = document.getElementsByClassName('activeView');
+              for (var k = 0; k < v.length; v++) {
+                v[k].className = '';
+              }
+              this.className = 'activeView';
+              document.getElementById("sidebar").style.display = "block";
+              displayFilteredList();
+            }
+          }
+        };
+
+        var layers2 = document.getElementById('layerItemsViewToggle');
+        layers2.appendChild(link2);
+      }
+
+      map.on('render', afterChangeComplete);
+    });
+  </script>
+
+</body>
+
+</html>
